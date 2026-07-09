@@ -116,6 +116,30 @@
   @keyframes fall{to{transform:translateY(105vh) rotate(360deg); opacity:.9}}
   .footnote{text-align:center; font-size:11px; color:#6b7aa0; margin-top:6px;}
   .pop{animation:pop .32s;} @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+  /* ===== 自适应：手机 / 平板 / 电脑 ===== */
+  @media (min-width:640px){
+    #app{max-width:560px;}
+    body{padding:22px;}
+    h1{font-size:28px;} h2{font-size:20px;}
+    .menu-btn{font-size:21px; padding:18px 20px;}
+    .play-btn{width:104px; height:104px; font-size:46px;}
+    canvas{height:300px;}
+    .opt{font-size:24px; padding:17px;}
+    .slot,.tile{height:64px; font-size:30px;}
+    .lv{width:88px; height:88px; font-size:28px;}
+  }
+  @media (min-width:1024px){
+    body{align-items:center;}
+    #app{max-width:680px;}
+    canvas{height:360px;}
+    .card{padding:26px;}
+  }
+  /* 横屏手机/平板：画板矮一点，省竖向空间 */
+  @media (max-height:520px) and (orientation:landscape){
+    canvas{height:150px;}
+    .play-btn{width:70px; height:70px; font-size:32px;}
+  }
 </style>
 </head>
 <body>
