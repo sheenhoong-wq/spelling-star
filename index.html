@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#a685e2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="听写王">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>小小听写王 · Spelling Star</title>
+<style>
+  :root{ --bg1:#7bdff2; --bg2:#b2f7ef; --card:#fff; --ink:#2b3a55; --pink:#ff8fab;
+    --purple:#a685e2; --green:#4cd97b; --yellow:#ffd166; --red:#ff6b6b; --blue:#4d96ff; --soft:#eef3ff; --lock:#c3cbe0;}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; height:100%; font-family:"Comic Sans MS",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;}
+  body{background:linear-gradient(160deg,var(--bg1),var(--bg2)); color:var(--ink);
+    display:flex; justify-content:center; align-items:flex-start; min-height:100%; padding:14px;}
+  #app{width:100%; max-width:460px;}
+  .card{background:var(--card); border-radius:26px; padding:20px; box-shadow:0 12px 30px rgba(60,80,140,.25); margin-bottom:14px;}
+  h1{font-size:24px; margin:6px 0 2px; text-align:center;} h2{font-size:18px; margin:2px 0 12px;}
+  .subtitle{text-align:center; color:#7d89a8; font-size:13px; margin-bottom:8px;}
+  .big-emoji{font-size:48px; text-align:center; margin:2px 0;}
+  button{font-family:inherit; cursor:pointer; border:none; border-radius:16px; font-weight:bold;}
+  .menu-btn{width:100%; display:flex; align-items:center; gap:14px; padding:16px 18px; margin:9px 0;
+    font-size:19px; color:#fff; border-radius:20px; box-shadow:0 5px 0 rgba(0,0,0,.12); transition:transform .08s; text-align:left;}
+  .menu-btn:active{transform:translateY(3px); box-shadow:0 2px 0 rgba(0,0,0,.12);}
+  .m-blue{background:var(--blue);} .m-green{background:var(--green);} .m-pink{background:var(--pink);} .m-purple{background:var(--purple);}
+  .menu-btn .ic{font-size:30px;} .menu-btn small{display:block; font-size:12px; font-weight:normal; opacity:.92;}
+  .badge{margin-left:auto; background:rgba(255,255,255,.35); padding:3px 10px; border-radius:12px; font-size:14px;}
+
+  label{font-size:14px; font-weight:bold; display:block; margin:12px 0 5px;}
+  select,input,textarea{width:100%; font-family:inherit; font-size:16px; padding:11px 12px; border:2px solid #dbe3ff; border-radius:14px; outline:none; color:var(--ink); background:#fbfcff;}
+  select:focus,input:focus,textarea:focus{border-color:var(--purple);}
+  textarea{min-height:110px; resize:vertical;}
+  .row{display:flex; gap:10px;} .row>*{flex:1;}
+  .toggle{display:flex; align-items:center; gap:10px; margin-top:12px; font-size:13px; font-weight:bold;}
+  .toggle input{width:auto; transform:scale(1.4);}
+  .primary{width:100%; padding:15px; font-size:19px; color:#fff; background:var(--purple); box-shadow:0 5px 0 #7d5fc0; margin-top:16px;}
+  .primary:active{transform:translateY(3px); box-shadow:0 2px 0 #7d5fc0;}
+  .ghost{width:100%; padding:11px; font-size:14px; color:#7d89a8; background:transparent; margin-top:6px;}
+  .back{background:var(--soft); color:var(--ink); padding:8px 13px; font-size:14px; border-radius:13px;}
+  .note{font-size:12px; color:#7d89a8; line-height:1.6; background:var(--soft); padding:10px 12px; border-radius:12px; margin-top:10px;}
+
+  .levels{display:flex; flex-direction:column; gap:12px; align-items:center; margin-top:6px;}
+  .lv{width:78px; height:78px; border-radius:50%; font-size:26px; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 5px 0 rgba(0,0,0,.15);}
+  .lv small{font-size:11px; font-weight:normal;}
+  .lv.done{background:var(--green); box-shadow:0 5px 0 #33ab5e;}
+  .lv.open{background:var(--yellow); color:#7a5b00; box-shadow:0 5px 0 #e0a800;}
+  .lv.locked{background:var(--lock); box-shadow:0 5px 0 #a6afc7;}
+  .lv .st{font-size:12px; letter-spacing:-1px;}
+  .lv:active{transform:translateY(3px);}
+  .lv-line{width:4px; height:14px; background:#d7deef;}
+
+  .topbar{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+  .progress{height:14px; background:var(--soft); border-radius:10px; overflow:hidden; margin:4px 8px 12px; flex:1;}
+  .progress>div{height:100%; width:0; background:linear-gradient(90deg,var(--yellow),var(--green)); transition:width .3s;}
+  .hearts{font-size:16px; white-space:nowrap;}
+
+  .prompt-zone{text-align:center; margin:2px 0 10px;}
+  .play-btn{width:88px; height:88px; border-radius:50%; font-size:38px; color:#fff; background:radial-gradient(circle at 35% 30%,#ffe08a,var(--yellow)); box-shadow:0 6px 0 #e0a800, 0 10px 20px rgba(224,168,0,.4);}
+  .play-btn:active{transform:translateY(3px); box-shadow:0 3px 0 #e0a800;}
+  .qtype{display:inline-block; font-size:12px; color:#8a7cc0; background:#f0ecff; padding:3px 12px; border-radius:12px; margin-bottom:4px; font-weight:bold;}
+  .task-hint{font-size:13px; color:#7d89a8; margin-top:6px;}
+  .hint-row{display:flex; gap:8px; justify-content:center; margin-top:8px; flex-wrap:wrap;}
+  .mini{padding:8px 12px; font-size:13px; background:var(--soft); color:var(--ink); border-radius:13px;}
+
+  #exercise{margin-top:8px; min-height:120px;}
+  .opts{display:flex; flex-direction:column; gap:10px;}
+  .opt{padding:15px; font-size:22px; background:#fff; color:var(--ink); border:2px solid #e3e9ff; border-radius:16px; box-shadow:0 4px 0 #dfe6ff; letter-spacing:2px;}
+  .opt:active{transform:translateY(2px); box-shadow:0 2px 0 #dfe6ff;}
+  .opt.wrong{background:#ffe3e3; border-color:var(--red); box-shadow:0 4px 0 #f3b4b4;}
+  .opt.right{background:#dcfce7; border-color:var(--green); box-shadow:0 4px 0 #a7e8c0;}
+
+  .slots,.tiles{display:flex; flex-wrap:wrap; gap:8px; justify-content:center;}
+  .slots{min-height:60px; margin:6px 0 12px; padding:8px; background:var(--soft); border-radius:16px;}
+  .slot{min-width:44px; height:56px; font-size:26px; border-radius:12px; background:#fff; border:2px solid var(--purple); display:flex; align-items:center; justify-content:center; padding:0 6px;}
+  .tile{min-width:48px; height:56px; font-size:26px; background:#fff; color:var(--ink); border:2px solid #e3e9ff; border-radius:12px; box-shadow:0 4px 0 #dfe6ff; padding:0 8px;}
+  .tile:active{transform:translateY(2px); box-shadow:0 1px 0 #dfe6ff;}
+  .tile.used{opacity:.25;}
+  .letters{display:flex; gap:6px; justify-content:center; font-size:30px; letter-spacing:2px; margin:8px 0; flex-wrap:wrap;}
+  .lchar{padding:6px 10px; border-radius:10px; border:2px solid transparent; background:var(--soft); min-width:40px; text-align:center;}
+  .lchar.blank{border-color:var(--purple); color:var(--purple); background:#fff;}
+  .lchar.tap{cursor:pointer;} .lchar.tap:active{transform:scale(.94);}
+  .lchar.bad{background:#ffe3e3; border-color:var(--red);} .lchar.good{background:#dcfce7; border-color:var(--green);}
+
+  canvas{width:100%; height:200px; background:#fff; border:3px dashed #c7d2fe; border-radius:18px; touch-action:none; display:block;}
+  .canvas-tools{display:flex; gap:8px; margin-top:8px;}
+  .canvas-tools button{flex:1; padding:10px; font-size:14px; background:var(--soft); color:var(--ink);}
+  .grade-btn{width:100%; padding:14px; font-size:18px; color:#fff; background:var(--green); box-shadow:0 5px 0 #33ab5e; margin-top:10px;}
+  .grade-btn:active{transform:translateY(2px); box-shadow:0 3px 0 #33ab5e;}
+
+  .feedback{text-align:center; font-size:18px; min-height:24px; margin-top:12px; font-weight:bold;}
+  .ok{color:var(--green);} .no{color:var(--red);}
+  .reveal{font-size:24px; color:var(--purple); letter-spacing:3px;}
+  .ocr-read{font-size:12px; color:#7d89a8;}
+  .judge-row{display:flex; gap:10px; margin-top:10px;} .judge-row button{flex:1; padding:12px; font-size:15px; color:#fff;}
+  .j-ok{background:var(--green);} .j-no{background:var(--red);}
+
+  .result-emoji{font-size:64px; text-align:center;}
+  .score-line{text-align:center; font-size:20px; margin:6px 0;}
+  .list-item{display:flex; align-items:center; gap:8px; background:var(--soft); border-radius:14px; padding:10px 12px; margin:8px 0;}
+  .list-item .name{font-weight:bold; flex:1;} .list-item .lang-tag{font-size:11px; background:#fff; padding:2px 8px; border-radius:10px; color:#7d89a8;}
+  .list-item button{padding:7px 10px; font-size:13px; background:#fff; color:var(--ink);}
+  .rv-item{display:flex; align-items:center; gap:10px; background:var(--soft); border-radius:16px; padding:10px; margin:10px 0;}
+  .rv-img{width:88px; height:62px; object-fit:contain; background:#fff; border:1px solid #dbe3ff; border-radius:10px; flex:none;}
+  .rv-info{flex:1; min-width:0;}
+  .rv-word{font-size:26px; font-weight:bold; color:var(--ink); line-height:1.1;}
+  .rv-ocr{font-size:11px; color:#7d89a8; margin-top:2px;}
+  .rv-btns{display:flex; gap:6px; flex:none;}
+  .rv-btns button{width:46px; height:46px; border-radius:12px; font-size:16px; background:#fff; color:var(--ink); border:2px solid #dbe3ff;}
+  .rv-yes.on{background:var(--green); color:#fff; border-color:var(--green);}
+  .rv-no.on{background:var(--red); color:#fff; border-color:var(--red);}
+  .hidden{display:none;}
+  .confetti{position:fixed; top:-10px; font-size:22px; animation:fall 1.6s linear forwards; pointer-events:none; z-index:99;}
+  @keyframes fall{to{transform:translateY(105vh) rotate(360deg); opacity:.9}}
+  .footnote{text-align:center; font-size:11px; color:#6b7aa0; margin-top:6px;}
+  .pop{animation:pop .32s;} @keyframes pop{0%{transform:scale(.7);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="home" class="card">
+    <div class="big-emoji">🌟✍️📚</div>
+    <h1>小小听写王</h1>
+    <div class="subtitle">Spelling Star · 闯关式听写练习</div>
+    <button class="menu-btn m-blue" onclick="go('setup')"><span class="ic">🎮</span><span>开始闯关<small>多种玩法，反复练熟</small></span></button>
+    <button class="menu-btn m-green" onclick="go('lists')"><span class="ic">📝</span><span>老师的题目<small>输入本周听写单词</small></span></button>
+    <button class="menu-btn m-pink" onclick="startReview()"><span class="ic">🔁</span><span>错词复习<small>不会的再练熟</small><span class="badge" id="reviewBadge">0</span></span></button>
+    <button class="menu-btn m-purple" onclick="go('settings')"><span class="ic">⚙️</span><span>设置<small>自动批改 OCR / 说明</small></span></button>
+    <div class="footnote">多题型闯关 + 手写OCR批改 · PWA v3</div>
+  </div>
+
+  <div id="setup" class="card hidden">
+    <div class="topbar"><button class="back" onclick="go('home')">🏠 返回</button><b>选择练习</b><span></span></div>
+    <label>练哪套词？</label>
+    <select id="setSel" onchange="onSetChange()"></select>
+    <div id="langPick">
+      <div class="row">
+        <div><label>👂 听</label><select id="listenLang"></select></div>
+        <div><label>✍️ 答</label><select id="writeLang"></select></div>
+      </div>
+      <div class="note" id="crossNote"></div>
+    </div>
+    <div class="toggle"><input type="checkbox" id="lookFirst" checked><label for="lookFirst" style="margin:0;">新词先看一遍（Look-Cover-Write-Check 记忆法）</label></div>
+    <button class="primary" onclick="go('levelmap')">▶️ 进入关卡</button>
+  </div>
+
+  <div id="levelmap" class="card hidden">
+    <div class="topbar"><button class="back" onclick="go('setup')">← 返回</button><b id="lmTitle">关卡</b><span></span></div>
+    <div class="subtitle" id="lmSub"></div>
+    <div class="levels" id="levels"></div>
+  </div>
+
+  <div id="game" class="card hidden">
+    <div class="topbar"><button class="back" onclick="quitGame()">✕</button><div class="progress"><div id="progFill"></div></div><div class="hearts" id="hearts"></div></div>
+    <div class="prompt-zone">
+      <div class="qtype" id="qtype"></div>
+      <div><button class="play-btn" onclick="speakPrompt()">🔊</button></div>
+      <div class="task-hint" id="taskHint"></div>
+      <div class="task-hint" id="meaningHint" style="color:#a685e2;"></div>
+      <div class="hint-row">
+        <button class="mini" onclick="speakPrompt(0.55)">🐢 慢读</button>
+        <button class="mini" onclick="showHint()">💡 提示</button>
+      </div>
+    </div>
+    <div id="exercise"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="judge-row hidden" id="judgeRow">
+      <button class="j-ok" onclick="manualJudge(true)">👍 写对了</button>
+      <button class="j-no" onclick="manualJudge(false)">🔁 再练</button>
+    </div>
+  </div>
+
+  <div id="result" class="card hidden">
+    <div class="result-emoji" id="resEmoji">🎉</div>
+    <h1 id="resTitle">过关啦！</h1>
+    <div class="score-line stars" id="resStars"></div>
+    <div class="score-line" id="resScore"></div>
+    <div class="note" id="resNote"></div>
+    <button class="primary" onclick="nextLevel()">➡️ 下一关</button>
+    <button class="ghost" onclick="go('levelmap')">回关卡地图</button>
+  </div>
+
+  <div id="review" class="card hidden">
+    <div class="topbar"><span></span><b>家长复核 ✍️</b><span></span></div>
+    <div class="subtitle">检查每个手写字（中文尤其看笔画），写错的点成 ✘，会自动加入错题本</div>
+    <div id="reviewList"></div>
+    <button class="primary" onclick="finalizeLevel()">完成复核，看成绩</button>
+  </div>
+
+  <div id="lists" class="card hidden">
+    <div class="topbar"><button class="back" onclick="go('home')">🏠 返回</button><b>老师的题目</b><span></span></div>
+    <div id="listContainer"></div>
+    <hr style="border:none;border-top:1px dashed #dbe3ff;margin:14px 0;">
+    <h2 id="listFormTitle">➕ 新增一套</h2>
+    <label>名字（例：第5周英文听写）</label>
+    <input id="newListName" placeholder="第5周英文听写">
+    <div class="row">
+      <div><label>主答语言</label>
+        <select id="newPrimaryLang"><option value="en">English 英文</option><option value="ms">Melayu 马来文</option><option value="zh">中文</option></select></div>
+      <div><label>翻译1（选填）</label>
+        <select id="newT1Lang"><option value="">无</option><option value="zh">中文</option><option value="en">English 英文</option><option value="ms">Melayu 马来文</option></select></div>
+      <div><label>翻译2（选填）</label>
+        <select id="newT2Lang"><option value="">无</option><option value="ms">Melayu 马来文</option><option value="zh">中文</option><option value="en">English 英文</option></select></div>
+    </div>
+    <label>每行一题：主词, 翻译1, 翻译2（后面可留空）</label>
+    <textarea id="newListWords" placeholder="earth, 地球, bumi&#10;sun, 太阳, matahari"></textarea>
+    <button class="primary" id="saveListBtn" onclick="saveList()">💾 保存这套题</button>
+    <button class="ghost hidden" id="cancelEditBtn" onclick="cancelEdit()">取消编辑</button>
+    <div class="note">一个主词可配多个翻译，例：<b>earth, 地球, bumi</b>。后面的翻译列留空就忽略。保存后到「开始闯关」可任选听/写/互译/🎲混合。</div>
+  </div>
+
+  <div id="settings" class="card hidden">
+    <div class="topbar"><button class="back" onclick="go('home')">🏠 返回</button><b>设置</b><span></span></div>
+    <h2>🤖 手写自动批改（OCR）</h2>
+    <div class="note">填入 Google Cloud Vision 的 API 密钥，手写题就能自动认字判分（中/英/马来手写都支持）。<b>不填也能用</b>：手写题改由你/孩子点「对/错」。申请步骤见说明文件。</div>
+    <label>Google Vision API Key</label>
+    <input id="apiKey" placeholder="AIza...（留空则家长核对）">
+    <div class="row" style="margin-top:10px;">
+      <button class="primary" style="margin-top:0;" onclick="saveKey()">💾 保存</button>
+      <button class="back" style="border-radius:16px;" onclick="testKey()">🔍 测试</button>
+    </div>
+    <div class="feedback" id="keyMsg"></div>
+    <div class="toggle"><input type="checkbox" id="reviewToggle" checked onchange="saveReview()"><label for="reviewToggle" style="margin:0;">每关结束后，家长一次性复核手写（推荐 · 中文能查出少一画）。关掉＝完全信任 OCR 自动判分</label></div>
+    <hr style="border:none;border-top:1px dashed #dbe3ff;margin:14px 0;">
+    <div class="note">答错的词会自动进「错词复习」，按遗忘规律隔几天再考。所有数据只存在这台手机上。<br><br><button class="ghost" style="color:var(--red)" onclick="resetProgress()">清空所有进度</button></div>
+  </div>
+
+</div>
+
+<script>
+const LANG={ en:{code:"en-US",label:"English 英文",hint:"en"}, ms:{code:"ms-MY",label:"Melayu 马来文",hint:"ms"}, zh:{code:"zh-CN",label:"中文",hint:"zh"} };
+const BANK={
+  animals:{name:"🐱 动物 Animals",words:[
+    {zh:"猫",en:"cat",ms:"kucing"},{zh:"狗",en:"dog",ms:"anjing"},{zh:"鱼",en:"fish",ms:"ikan"},{zh:"鸟",en:"bird",ms:"burung"},
+    {zh:"青蛙",en:"frog",ms:"katak"},{zh:"牛",en:"cow",ms:"lembu"},{zh:"鸭",en:"duck",ms:"itik"},{zh:"老虎",en:"tiger",ms:"harimau"},
+    {zh:"马",en:"horse",ms:"kuda"},{zh:"羊",en:"sheep",ms:"kambing"}]},
+  school:{name:"🏫 学校 School",words:[
+    {zh:"书",en:"book",ms:"buku"},{zh:"笔",en:"pen",ms:"pen"},{zh:"桌子",en:"desk",ms:"meja"},{zh:"椅子",en:"chair",ms:"kerusi"},
+    {zh:"书包",en:"bag",ms:"beg"},{zh:"老师",en:"teacher",ms:"guru"},{zh:"铅笔",en:"pencil",ms:"pensel"},{zh:"尺",en:"ruler",ms:"pembaris"},
+    {zh:"学校",en:"school",ms:"sekolah"},{zh:"同学",en:"classmate",ms:"rakan"}]},
+  food:{name:"🍎 食物 Food",words:[
+    {zh:"饭",en:"rice",ms:"nasi"},{zh:"面包",en:"bread",ms:"roti"},{zh:"牛奶",en:"milk",ms:"susu"},{zh:"蛋",en:"egg",ms:"telur"},
+    {zh:"苹果",en:"apple",ms:"epal"},{zh:"水",en:"water",ms:"air"},{zh:"香蕉",en:"banana",ms:"pisang"},{zh:"蛋糕",en:"cake",ms:"kek"},
+    {zh:"糖",en:"sugar",ms:"gula"},{zh:"鸡",en:"chicken",ms:"ayam"}]},
+  daily:{name:"🏠 日常 Everyday",words:[
+    {zh:"房子",en:"house",ms:"rumah"},{zh:"门",en:"door",ms:"pintu"},{zh:"手",en:"hand",ms:"tangan"},{zh:"眼睛",en:"eye",ms:"mata"},
+    {zh:"月亮",en:"moon",ms:"bulan"},{zh:"太阳",en:"sun",ms:"matahari"},{zh:"雨",en:"rain",ms:"hujan"},{zh:"车",en:"car",ms:"kereta"},
+    {zh:"花",en:"flower",ms:"bunga"},{zh:"树",en:"tree",ms:"pokok"}]}
+};
+const LEVEL_SIZE=5;
+const HANZI_POOL="他她地把爸吧鸟鸦鸣鸡狗猫描鱼鲁书昼笔毛尺尽饭反面而牛午生半日目月用同问间学字宝完的很知和你我水永冰木本末未大天太犬人入八门们花草树林明朋".split("");
+const CONFUSE={ "猫":["描","苗","锚"],"狗":["拘","苟","够"],"鸟":["乌","鸦","鸣"],"书":["昼","尽","毛"],"笔":["毛","竿","笋"],"牛":["午","半","生"],"门":["们","问","间"],"日":["目","白","旦"],"月":["用","肉","舟"],"手":["毛","乎","失"],"水":["永","冰","泳"],"花":["华","荷","芽"],"树":["村","林","杜"],"太":["大","天","犬"],"车":["东","轧","轨"],"面":["而","靣","页"],"包":["句","勺","抱"] };
+
+const store={ get(k,d){try{return JSON.parse(localStorage.getItem(k))??d;}catch(e){return d;}}, set(k,v){localStorage.setItem(k,JSON.stringify(v));} };
+const getLists=()=>store.get("lists",[]), setLists=v=>store.set("lists",v);
+const getMistakes=()=>store.get("mistakes",{}), setMistakes=v=>store.set("mistakes",v);
+const getKey=()=>store.get("apiKey","");
+const getParentReview=()=>store.get("parentReview",true)!==false;
+function saveReview(){ store.set("parentReview", document.getElementById("reviewToggle").checked); }
+const getProg=()=>store.get("progress",{}), setProg=v=>store.set("progress",v);
+
+function go(id){
+  ["home","setup","levelmap","game","result","review","lists","settings"].forEach(x=>document.getElementById(x).classList.toggle("hidden",x!==id));
+  if(id==="home") refreshHome();
+  if(id==="setup") buildSetup();
+  if(id==="levelmap") renderLevelMap();
+  if(id==="lists") renderLists();
+  if(id==="settings"){ document.getElementById("apiKey").value=getKey(); document.getElementById("reviewToggle").checked=getParentReview(); }
+  window.scrollTo(0,0);
+}
+function refreshHome(){ document.getElementById("reviewBadge").textContent=allMistakes().length; }
+
+function voiceFor(code){const vs=speechSynthesis.getVoices();return vs.find(v=>v.lang===code)||vs.find(v=>v.lang.startsWith(code.split("-")[0]))||null;}
+function speak(text,lang,rate){ try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=LANG[lang].code;const v=voiceFor(LANG[lang].code);if(v)u.voice=v;u.rate=rate||0.85;u.pitch=1.1;speechSynthesis.speak(u);}catch(e){} }
+if(typeof speechSynthesis!=="undefined") speechSynthesis.onvoiceschanged=()=>{};
+
+function buildSetup(){
+  const sel=document.getElementById("setSel"); sel.innerHTML="";
+  Object.keys(BANK).forEach(k=>{const o=document.createElement("option");o.value="bank:"+k;o.textContent=BANK[k].name;sel.appendChild(o);});
+  getLists().forEach(l=>{const o=document.createElement("option");o.value="list:"+l.id;o.textContent="📝 "+l.name;sel.appendChild(o);});
+  onSetChange();
+}
+function populateLangSel(id,langKeys,withMix){ const s=document.getElementById(id); s.innerHTML=""; langKeys.forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=LANG[k].label;s.appendChild(o);}); if(withMix){const mo=document.createElement("option");mo.value="mix";mo.textContent="🎲 混合（随机语言）";s.appendChild(mo);} }
+function listLangs(l){ if(l.langs&&l.langs.length)return l.langs; if(l.lang)return [l.lang]; const w=l.words&&l.words[0]; if(w&&typeof w==="object")return Object.keys(w); return ["en"]; }
+function onSetChange(){
+  const v=document.getElementById("setSel").value;
+  if(v.startsWith("list:")){
+    const l=getLists().find(x=>x.id===v.slice(5)); const langs=listLangs(l);
+    if(langs.length>1){
+      populateLangSel("listenLang",langs,true); populateLangSel("writeLang",langs,true);
+      document.getElementById("listenLang").value=langs[0]; document.getElementById("writeLang").value=langs[0];
+      document.getElementById("langPick").style.display="block"; updateCrossNote();
+    } else { document.getElementById("langPick").style.display="none"; }
+  } else {
+    populateLangSel("listenLang",Object.keys(LANG),true); populateLangSel("writeLang",Object.keys(LANG),true);
+    document.getElementById("listenLang").value="en"; document.getElementById("writeLang").value="en";
+    document.getElementById("langPick").style.display="block"; updateCrossNote();
+  }
+  document.getElementById("listenLang").onchange=updateCrossNote;
+  document.getElementById("writeLang").onchange=updateCrossNote;
+}
+function updateCrossNote(){
+  const a=document.getElementById("listenLang").value,b=document.getElementById("writeLang").value,n=document.getElementById("crossNote");
+  if(a==="mix"||b==="mix"){ n.textContent="🎲 混合：每个词"+(a==="mix"?"随机挑一种语言播放":("用"+LANG[a].label+"播放"))+"，"+(b==="mix"?"随机语言书写":("用"+LANG[b].label+"书写"))+"。练跨语言反应最好用。"; return; }
+  n.textContent = a===b ? ("同语言听写：听"+LANG[a].label+"，答"+LANG[a].label) : ("互译：听"+LANG[a].label+"，答对应的"+LANG[b].label);
+}
+function pickHint(obj,L,W){ const order=["zh","en","ms"]; for(var i=0;i<order.length;i++){ var k=order[i]; if(k!==L && k!==W && obj[k]) return obj[k]; } return ""; }
+function currentConfig(){
+  const v=document.getElementById("setSel").value;
+  const lookFirst=document.getElementById("lookFirst").checked;
+  const LK=Object.keys(LANG);
+  if(v.startsWith("bank:")){
+    const key=v.slice(5),listen=document.getElementById("listenLang").value,write=document.getElementById("writeLang").value;
+    const words=BANK[key].words.map(w=>{ const L=(listen==="mix")?LK[Math.floor(Math.random()*LK.length)]:listen; const W=(write==="mix")?LK[Math.floor(Math.random()*LK.length)]:write; return {prompt:w[L], answer:w[W], listen:L, write:W, hint:pickHint(w,L,W)}; });
+    return {id:v+":"+listen+":"+write, label:BANK[key].name, words:words, lookFirst};
+  } else {
+    const l=getLists().find(x=>x.id===v.slice(5)); const langs=listLangs(l);
+    let listen,write;
+    if(langs.length>1){ listen=document.getElementById("listenLang").value; write=document.getElementById("writeLang").value; }
+    else { listen=langs[0]; write=langs[0]; }
+    const words=l.words.map(wRaw=>{ const obj=(typeof wRaw==="string")?(function(){var o={};o[langs[0]]=wRaw;return o;})():wRaw; const present=langs.filter(k=>obj[k]);
+      const L=(listen==="mix")?present[Math.floor(Math.random()*present.length)]:(obj[listen]?listen:present[0]);
+      const W=(write==="mix")?present[Math.floor(Math.random()*present.length)]:(obj[write]?write:present[0]);
+      return {prompt:obj[L], answer:obj[W], listen:L, write:W, hint:pickHint(obj,L,W)}; });
+    return {id:v+":"+listen+":"+write, label:l.name, words:words, lookFirst};
+  }
+}
+
+let cfg=null;
+function renderLevelMap(){
+  cfg=currentConfig();
+  const total=Math.max(1,Math.ceil(cfg.words.length/LEVEL_SIZE));
+  document.getElementById("lmTitle").textContent=cfg.label;
+  document.getElementById("lmSub").textContent="共 "+total+" 关 · 每关约 "+Math.min(LEVEL_SIZE,cfg.words.length)+" 词，多种玩法闯关";
+  const prog=getProg()[cfg.id]||{};
+  const box=document.getElementById("levels"); box.innerHTML="";
+  for(let i=0;i<total;i++){
+    if(i>0){const line=document.createElement("div");line.className="lv-line";box.appendChild(line);}
+    const cleared=prog[i]!==undefined; const open=(i===0)||prog[i-1]!==undefined;
+    const b=document.createElement("button");
+    b.className="lv "+(cleared?"done":open?"open":"locked");
+    const st=cleared?("⭐".repeat(prog[i])+"☆".repeat(3-prog[i])):"";
+    b.innerHTML=(cleared?"✓":open?"▶":"🔒")+"<small>第"+(i+1)+"关</small>"+(st?"<span class='st'>"+st+"</span>":"");
+    if(open) b.onclick=(function(k){return function(){startLevel(k);};})(i); else b.onclick=()=>speak("先过前面的关","zh");
+    box.appendChild(b);
+  }
+}
+
+let S=null;
+function tiersFor(lang){ return lang==="zh" ? [["mc_word","pick_char"],["unscramble"],["handwrite"]] : [["mc_word","spot_wrong"],["fill_blank","unscramble"],["handwrite"]]; }
+function pickType(lang,strength,answer){
+  let tier=tiersFor(lang)[Math.min(strength,2)].slice();
+  if(lang==="zh" && answer.length<2){ tier=tier.filter(t=>t!=="unscramble"); if(!tier.length)tier=["pick_char"]; }
+  if(answer.length<3){ tier=tier.filter(t=>t!=="spot_wrong"&&t!=="fill_blank"); if(!tier.length)tier=["mc_word"]; }
+  return tier[Math.floor(Math.random()*tier.length)];
+}
+function startLevel(li){
+  cfg=cfg||currentConfig();
+  const slice=cfg.words.slice(li*LEVEL_SIZE,li*LEVEL_SIZE+LEVEL_SIZE);
+  beginSession(slice,{mode:"level",levelIndex:li,lookFirst:cfg.lookFirst,cfgId:cfg.id,label:cfg.label});
+}
+function startReview(){
+  const all=allMistakes(); if(!all.length){alert("错词本是空的，先去闯关吧！");return;}
+  const due=dueMistakes(); const rest=all.filter(m=>due.indexOf(m)<0);
+  const pool=shuffle(due).concat(shuffle(rest)); // 到期的排前面，其余的也能随时重练
+  const slice=pool.slice(0,8).map(m=>({prompt:m.prompt,answer:m.answer,listen:m.listen,write:m.write}));
+  beginSession(slice,{mode:"review",lookFirst:true});
+}
+function beginSession(words,opt){
+  S={words, strength:words.map(()=>0), target:4, mastered:new Set(), queue:[], hearts:5, firstTry:words.map(()=>true), reviewItems:[], opt};
+  words.forEach((w,i)=>S.queue.push(i));
+  S.queue=shuffle(S.queue);
+  go("game"); loadTask();
+}
+let task=null;
+function loadTask(){
+  document.getElementById("feedback").textContent="";
+  document.getElementById("judgeRow").classList.add("hidden");
+  if(!S.queue.length){ finishLevel(); return; }
+  const wi=S.queue[0], w=S.words[wi], s=S.strength[wi];
+  task={wi, type:pickType(w.write,s,w.answer)};
+  document.getElementById("progFill").style.width=(S.mastered.size/S.words.length*100)+"%";
+  document.getElementById("hearts").textContent="❤️".repeat(S.hearts);
+  const names={mc_word:"选一选",pick_char:"选对的字",unscramble:w.write==="zh"?"排顺序":"字母排序",fill_blank:"填空",spot_wrong:"找错字",handwrite:"手写"};
+  document.getElementById("qtype").textContent=names[task.type];
+  document.getElementById("taskHint").textContent = w.listen===w.write?"听发音作答":("听"+LANG[w.listen].label+"，答"+LANG[w.write].label);
+  const mh=document.getElementById("meaningHint"); if(mh) mh.textContent = w.hint ? ("意思："+w.hint) : "";
+  renderExercise(w);
+  if(S.opt.lookFirst && s===0 && S.firstTry[wi] && (task.type==="mc_word"||task.type==="pick_char")){
+    const fb=document.getElementById("feedback"); fb.className="feedback"; fb.innerHTML="记住它：<span class='reveal'>"+w.answer+"</span>";
+    setTimeout(()=>{ const f=document.getElementById("feedback"); if(f.innerHTML.indexOf("记住")>=0) f.textContent=""; },2400);
+  }
+  setTimeout(()=>speakPrompt(),350);
+}
+function speakPrompt(rate){ if(task) speak(S.words[task.wi].prompt, S.words[task.wi].listen, rate); }
+function showHint(){
+  const w=S.words[task.wi], fb=document.getElementById("feedback"); fb.className="feedback";
+  fb.textContent = w.write==="zh" ? ("第一个字：「"+w.answer[0]+"」，共"+w.answer.length+"字") : ("开头：「"+w.answer[0].toUpperCase()+"」，共"+w.answer.length+"个字母");
+}
+
+function renderExercise(w){
+  const ex=document.getElementById("exercise"); ex.innerHTML="";
+  if(task.type==="mc_word") return renderMC(w,ex);
+  if(task.type==="pick_char") return renderPickChar(w,ex);
+  if(task.type==="unscramble") return renderUnscramble(w,ex);
+  if(task.type==="fill_blank") return renderFill(w,ex);
+  if(task.type==="spot_wrong") return renderSpot(w,ex);
+  if(task.type==="handwrite") return renderHandwrite(w,ex);
+}
+function renderMC(w,ex){
+  let opts;
+  if(w.write==="zh"){ const pool=allBankWords(w.write).filter(x=>x!==w.answer); opts=[w.answer].concat(shuffle(pool).slice(0,3)); }
+  else { opts=[w.answer].concat(misspellings(w.answer,3)); }
+  opts=shuffle(unique(opts)); while(opts.length<2)opts.push(w.answer);
+  const box=document.createElement("div"); box.className="opts";
+  opts.forEach(o=>{ const b=document.createElement("button"); b.className="opt"; b.textContent=o;
+    b.onclick=()=>{ const good=o===w.answer; b.classList.add(good?"right":"wrong"); disable(box); answer(good); };
+    box.appendChild(b); });
+  ex.appendChild(box);
+}
+function renderPickChar(w,ex){
+  const chars=w.answer.split(""); let pos=0; const chosen=[];
+  const slots=document.createElement("div"); slots.className="slots";
+  const optBox=document.createElement("div"); optBox.className="opts"; optBox.style.marginTop="10px";
+  function drawSlots(){ slots.innerHTML=""; chars.forEach((c,i)=>{ const d=document.createElement("div"); d.className="slot"; d.textContent=chosen[i]||""; slots.appendChild(d); }); }
+  function drawOpts(){
+    const correct=chars[pos]; const opts=shuffle(unique([correct].concat(confusePick(correct,3))));
+    const rowWrap=document.createElement("div"); rowWrap.className="tiles";
+    opts.forEach(o=>{ const b=document.createElement("button"); b.className="tile"; b.textContent=o;
+      b.onclick=()=>{ if(o===correct){ chosen[pos]=o; pos++; drawSlots(); if(pos>=chars.length){ answer(true); } else drawOpts(); }
+                      else { b.classList.add("used"); answer(false); } };
+      rowWrap.appendChild(b); });
+    optBox.innerHTML=""; optBox.appendChild(rowWrap);
+  }
+  drawSlots(); drawOpts(); ex.appendChild(slots); ex.appendChild(optBox);
+}
+function renderUnscramble(w,ex){
+  const units=w.answer.split(""); const built=[];
+  const slots=document.createElement("div"); slots.className="slots";
+  const tiles=document.createElement("div"); tiles.className="tiles"; tiles.style.marginTop="10px";
+  const order=shuffle(units.map((c,i)=>({c,i})));
+  function drawSlots(){ slots.innerHTML=""; units.forEach((_,i)=>{ const d=document.createElement("div");d.className="slot";d.textContent=built[i]||"";slots.appendChild(d);}); }
+  order.forEach(o=>{ const b=document.createElement("button"); b.className="tile"; b.textContent=o.c;
+    b.onclick=()=>{ if(b.classList.contains("used"))return; built.push(o.c); b.classList.add("used"); drawSlots();
+      if(built.length===units.length){ const good=built.join("")===w.answer; setTimeout(()=>answer(good),250); } };
+    tiles.appendChild(b); });
+  const undo=document.createElement("button"); undo.className="mini"; undo.style.marginTop="8px"; undo.textContent="↩️ 退一个";
+  undo.onclick=()=>{ if(!built.length)return; built.pop(); const used=tiles.querySelectorAll(".used"); if(used.length)used[used.length-1].classList.remove("used"); drawSlots(); };
+  drawSlots(); ex.appendChild(slots); ex.appendChild(tiles); ex.appendChild(undo);
+}
+function renderFill(w,ex){
+  const word=w.answer; const idx=1+Math.floor(Math.random()*(word.length-1)); const correct=word[idx];
+  const disp=document.createElement("div"); disp.className="letters";
+  word.split("").forEach((c,i)=>{ const s=document.createElement("span"); s.className="lchar"+(i===idx?" blank":""); s.textContent=i===idx?"＿":c; disp.appendChild(s); });
+  const opts=shuffle(unique([correct].concat(randLetters(correct,3))));
+  const box=document.createElement("div"); box.className="tiles"; box.style.marginTop="12px";
+  opts.forEach(o=>{ const b=document.createElement("button"); b.className="tile"; b.textContent=o;
+    b.onclick=()=>{ const good=o===correct; disp.children[idx].textContent=o; disp.children[idx].classList.add(good?"good":"bad"); disable(box); answer(good); };
+    box.appendChild(b); });
+  ex.appendChild(disp); ex.appendChild(box);
+}
+function renderSpot(w,ex){
+  const off=oneLetterOff(w.answer); const bad=off.bad, idx=off.idx;
+  const p=document.createElement("div"); p.style.textAlign="center"; p.style.fontSize="13px"; p.style.color="#7d89a8"; p.textContent="这个拼写有一个字母错了，点出来：";
+  const disp=document.createElement("div"); disp.className="letters";
+  bad.split("").forEach((c,i)=>{ const s=document.createElement("span"); s.className="lchar tap"; s.textContent=c;
+    s.onclick=()=>{ const good=i===idx; s.classList.add(good?"good":"bad"); if(good){ disp.children[idx].textContent=w.answer[idx]; } for(let k=0;k<disp.children.length;k++)disp.children[k].onclick=null; answer(good); };
+    disp.appendChild(s); });
+  ex.appendChild(p); ex.appendChild(disp);
+}
+let ctx,pad,drawing,strokes,cur;
+function renderHandwrite(w,ex){
+  const c=document.createElement("canvas"); c.id="pad"; ex.appendChild(c);
+  const tools=document.createElement("div"); tools.className="canvas-tools";
+  tools.innerHTML="<button onclick='undoStroke()'>↩️ 撤销</button><button onclick='clearPad()'>🧹 清空</button>";
+  ex.appendChild(tools);
+  const gb=document.createElement("button"); gb.className="grade-btn"; gb.id="gradeBtn"; gb.textContent="✅ 批改"; gb.onclick=gradeHandwriting; ex.appendChild(gb);
+  setupCanvas();
+}
+function setupCanvas(){
+  pad=document.getElementById("pad"); const r=pad.getBoundingClientRect(); const dpr=window.devicePixelRatio||1;
+  pad.width=r.width*dpr; pad.height=r.height*dpr; ctx=pad.getContext("2d"); ctx.scale(dpr,dpr);
+  ctx.lineCap="round"; ctx.lineJoin="round"; ctx.strokeStyle="#2b3a55"; strokes=[]; cur=[]; drawing=false;
+  let activeId=null; // 只认第一支落下的笔/手指，防手掌误触
+  const pos=e=>{const b=pad.getBoundingClientRect();const pr=(e.pressure&&e.pressure>0)?e.pressure:0.5;return{x:e.clientX-b.left,y:e.clientY-b.top,pr:pr};};
+  const widthFor=pr=>4+pr*6; // 笔压越大，线越粗
+  const down=e=>{ if(activeId!==null)return; activeId=(e.pointerId!==undefined?e.pointerId:1); e.preventDefault();
+    if(pad.setPointerCapture&&e.pointerId!==undefined){try{pad.setPointerCapture(e.pointerId);}catch(_){}}
+    drawing=true; cur=[pos(e)]; };
+  const move=e=>{ if(!drawing||(e.pointerId!==undefined&&e.pointerId!==activeId))return; e.preventDefault();
+    const coalesced=(e.getCoalescedEvents?e.getCoalescedEvents():null); const list=(coalesced&&coalesced.length)?coalesced:[e];
+    list.forEach(ev=>{ const p=pos(ev); const q=cur[cur.length-1]||p; ctx.lineWidth=widthFor(p.pr); ctx.beginPath(); ctx.moveTo(q.x,q.y); ctx.lineTo(p.x,p.y); ctx.stroke(); cur.push(p); }); };
+  const up=e=>{ if(e&&e.pointerId!==undefined&&e.pointerId!==activeId)return; if(!drawing){activeId=null;return;} drawing=false; activeId=null; if(cur.length)strokes.push(cur); cur=[]; };
+  if(window.PointerEvent){
+    pad.onpointerdown=down; pad.onpointermove=move; pad.onpointerup=up; pad.onpointercancel=up; pad.onpointerleave=up;
+  } else { // 老旧设备兜底：鼠标 + 触摸
+    const t=fn=>e=>{const pt=e.touches?e.touches[0]:e; fn({clientX:pt.clientX,clientY:pt.clientY,pressure:0,preventDefault:()=>e.preventDefault()});};
+    pad.onmousedown=down; pad.onmousemove=move; window.onmouseup=up;
+    pad.ontouchstart=t(down); pad.ontouchmove=t(move); pad.ontouchend=t(up);
+  }
+}
+function redraw(){ctx.clearRect(0,0,pad.width,pad.height);ctx.lineWidth=6;strokes.forEach(s=>{ctx.beginPath();s.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();});}
+function clearPad(){strokes=[];cur=[];if(ctx)ctx.clearRect(0,0,pad.width,pad.height);}
+function undoStroke(){strokes.pop();redraw();}
+async function gradeHandwriting(){
+  const fb=document.getElementById("feedback"); const w=S.words[task.wi];
+  if(!strokes||!strokes.length){fb.className="feedback";fb.textContent="先写一写再批改哦 ✍️";return;}
+  const img=pad.toDataURL("image/png");
+  const gb=document.getElementById("gradeBtn"); if(gb)gb.disabled=true;
+  const record=(pass,ocrText)=>{ S.reviewItems.push({wi:task.wi, word:w.answer, lang:w.write, img:img, ocrText:ocrText, ocrPass:pass, verdict:pass}); };
+  const key=getKey();
+  if(!key){ record(true,"(未识别·待复核)"); fb.className="feedback ok pop"; fb.innerHTML="✅ 已记录，稍后家长复核"; answer(true); return; }
+  fb.className="feedback";fb.textContent="🤖 正在认字…";
+  try{
+    const res=await ocrRecognize(img.split(",")[1],w.write,key);
+    const text=(res&&res.text)||"", conf=(res&&typeof res.conf==="number")?res.conf:1;
+    const got=normalize(text,w.write),want=normalize(w.answer,w.write);
+    const pass=(got.length>0 && got===want && (w.write==="zh"||conf>=0.5)); // 中文只做初判，最终以家长复核为准
+    record(pass, text.trim()||"看不清");
+    if(pass){ fb.className="feedback ok pop"; fb.innerHTML="✅ 写对了！<span class='reveal'>"+w.answer+"</span>"; }
+    else { fb.className="feedback no"; fb.innerHTML="记为待改：正确 <span class='reveal'>"+w.answer+"</span> <span class='ocr-read'>（识别到："+(text.trim()||"看不清")+"）</span>"; }
+    answer(pass);
+  }catch(err){ record(true,"(识别失败·待复核)"); fb.className="feedback"; fb.innerHTML="已记录，稍后家长复核"; answer(true); }
+}
+function showJudge(){ document.getElementById("judgeRow").classList.remove("hidden"); const gb=document.getElementById("gradeBtn"); if(gb)gb.classList.add("hidden"); }
+function manualJudge(good){ document.getElementById("judgeRow").classList.add("hidden"); answer(good,true); }
+
+function answer(good,manual){
+  const wi=task.wi, w=S.words[wi];
+  S.queue.shift();
+  if(good){
+    const fb=document.getElementById("feedback"); if(fb.textContent===""){ fb.className="feedback ok pop"; fb.textContent="✅ 对了！"; }
+    burst();
+    S.strength[wi]++;
+    if(S.strength[wi]>=S.target){ S.mastered.add(wi); }
+    else { const p=Math.min(S.queue.length, 3+Math.floor(Math.random()*3)); S.queue.splice(p,0,wi); }
+  } else {
+    S.firstTry[wi]=false; S.hearts=Math.max(0,S.hearts-1);
+    srDemote(w);
+    const fb=document.getElementById("feedback"); if(fb.textContent===""||fb.textContent==="🤖 正在认字…"){ fb.className="feedback no"; fb.innerHTML="正确答案 <span class='reveal'>"+w.answer+"</span>"; }
+    S.strength[wi]=Math.max(0,S.strength[wi]-1); S.mastered.delete(wi);
+    const p=Math.min(S.queue.length, 1+Math.floor(Math.random()*2)); S.queue.splice(p,0,wi);
+  }
+  document.getElementById("progFill").style.width=(S.mastered.size/S.words.length*100)+"%";
+  document.getElementById("hearts").textContent="❤️".repeat(S.hearts);
+  const delay=good?750:1500;
+  setTimeout(()=>{ if(S.mastered.size>=S.words.length){ finishLevel(); } else loadTask(); }, delay);
+}
+
+const keyOf=w=>w.write+":"+w.answer;
+function allMistakes(){ const m=getMistakes(); return Object.keys(m).map(k=>m[k]); }
+function dueMistakes(){ const m=getMistakes(),now=Date.now(); return Object.keys(m).map(k=>m[k]).filter(x=>x.due<=now); }
+function srDemote(w){ const m=getMistakes(),k=keyOf(w); const e=m[k]||{prompt:w.prompt,answer:w.answer,listen:w.listen,write:w.write,box:0}; e.box=0; e.due=Date.now(); m[k]=e; setMistakes(m); }
+function srPromote(w){ const m=getMistakes(),k=keyOf(w),e=m[k]; if(!e)return; e.box=(e.box||0)+1; const days=[0,1,2,4,7][Math.min(e.box,4)]; if(e.box>=3)delete m[k]; else {e.due=Date.now()+days*86400000;m[k]=e;} setMistakes(m); }
+
+function finishLevel(){
+  document.getElementById("progFill").style.width="100%";
+  if(S.reviewItems && S.reviewItems.length && getParentReview()){ renderParentReview(); }
+  else { finalizeLevel(); }
+}
+function renderParentReview(){
+  const box=document.getElementById("reviewList"); box.innerHTML="";
+  S.reviewItems.forEach((it)=>{
+    const card=document.createElement("div"); card.className="rv-item";
+    const img=document.createElement("img"); img.className="rv-img"; img.src=it.img;
+    const info=document.createElement("div"); info.className="rv-info";
+    info.innerHTML="<div class='rv-word'>"+it.word+"</div><div class='rv-ocr'>识别："+(it.ocrText||"—")+"</div>";
+    const btns=document.createElement("div"); btns.className="rv-btns";
+    const yes=document.createElement("button"); const no=document.createElement("button");
+    yes.textContent="✔"; no.textContent="✘";
+    function paint(){ yes.className="rv-yes"+(it.verdict?" on":""); no.className="rv-no"+(!it.verdict?" on":""); }
+    yes.onclick=()=>{ it.verdict=true; paint(); };
+    no.onclick=()=>{ it.verdict=false; paint(); };
+    paint(); btns.appendChild(yes); btns.appendChild(no);
+    card.appendChild(img); card.appendChild(info); card.appendChild(btns); box.appendChild(card);
+  });
+  go("review");
+}
+function finalizeLevel(){
+  // 按词汇总家长复核结果（同一个词写了多次，任一判错即算错）
+  const wrongIdx=new Set(), seen={};
+  (S.reviewItems||[]).forEach(it=>{ if(!seen[it.wi])seen[it.wi]=true; if(!it.verdict) wrongIdx.add(it.wi); });
+  Object.keys(seen).forEach(k=>{ const wi=+k; const w=S.words[wi]; if(wrongIdx.has(wi)) srDemote(w); else srPromote(w); });
+  const total=S.words.length; let clean=0;
+  S.words.forEach((w,i)=>{ if(S.firstTry[i] && !wrongIdx.has(i)) clean++; });
+  const ratio=clean/total, stars=ratio>=0.9?3:ratio>=0.6?2:1;
+  if(S.opt.mode==="level"){
+    const prog=getProg(); prog[S.opt.cfgId]=prog[S.opt.cfgId]||{};
+    const prev=prog[S.opt.cfgId][S.opt.levelIndex]==null?0:prog[S.opt.cfgId][S.opt.levelIndex];
+    prog[S.opt.cfgId][S.opt.levelIndex]=Math.max(prev, stars); setProg(prog);
+  }
+  document.getElementById("resEmoji").textContent=stars>=3?"🏆":stars>=2?"🎉":"🌱";
+  document.getElementById("resTitle").textContent=S.opt.mode==="review"?"复习完成！":"过关啦！";
+  document.getElementById("resStars").textContent="⭐".repeat(stars)+"☆".repeat(3-stars);
+  document.getElementById("resScore").textContent="全对（含笔画）"+clean+" / "+total;
+  const inBook=allMistakes().length;
+  const added=wrongIdx.size?("你标错的 "+wrongIdx.size+" 个已进错题本。"):"";
+  document.getElementById("resNote").textContent=(added+(inBook?("错题本共 "+inBook+" 个词，随时可去「错词复习」。"):"全部掌握，太棒了！")).trim();
+  for(let i=0;i<16;i++)burst();
+  go("result");
+}
+function nextLevel(){
+  if(!S||S.opt.mode!=="level"){ go("home"); return; }
+  cfg=currentConfig();
+  const total=Math.ceil(cfg.words.length/LEVEL_SIZE); const ni=S.opt.levelIndex+1;
+  if(ni<total) startLevel(ni); else go("levelmap");
+}
+function quitGame(){ speechSynthesis.cancel(); if(confirm("退出这一关？本关进度不保存")) go(cfg?"levelmap":"home"); }
+
+function renderLists(){
+  const c=document.getElementById("listContainer"),ls=getLists(); c.innerHTML="";
+  if(!ls.length) c.innerHTML="<div class='note'>还没有题目。在下面新增，把老师这周的听写单词输进去。</div>";
+  ls.forEach(l=>{ const d=document.createElement("div");d.className="list-item"; const langs=listLangs(l); const tag=langs.map(k=>LANG[k].label).join("+")+" · "+l.words.length+"题";
+    d.innerHTML="<span class='name'>"+l.name+"</span><span class='lang-tag'>"+tag+"</span>";
+    const edit=document.createElement("button");edit.textContent="✏️";edit.onclick=(function(id){return function(){editList(id);};})(l.id);
+    const del=document.createElement("button");del.textContent="🗑️";del.onclick=(function(id,nm){return function(){if(confirm("删除「"+nm+"」？")){setLists(getLists().filter(x=>x.id!==id));renderLists();}};})(l.id,l.name);
+    d.appendChild(edit);d.appendChild(del);c.appendChild(d); });
+}
+let editingListId=null;
+function resetListForm(){ editingListId=null;
+  document.getElementById("newListName").value=""; document.getElementById("newListWords").value="";
+  document.getElementById("newPrimaryLang").value="en"; document.getElementById("newT1Lang").value=""; document.getElementById("newT2Lang").value="";
+  document.getElementById("listFormTitle").textContent="➕ 新增一套";
+  document.getElementById("saveListBtn").textContent="💾 保存这套题";
+  document.getElementById("cancelEditBtn").classList.add("hidden");
+}
+function cancelEdit(){ resetListForm(); }
+function editList(id){
+  const l=getLists().find(x=>x.id===id); if(!l)return; const langs=listLangs(l);
+  editingListId=id;
+  document.getElementById("newListName").value=l.name;
+  document.getElementById("newPrimaryLang").value=langs[0]||"en";
+  document.getElementById("newT1Lang").value=langs[1]||"";
+  document.getElementById("newT2Lang").value=langs[2]||"";
+  const cols=[langs[0],langs[1],langs[2]];
+  const lines=l.words.map(wRaw=>{ const obj=(typeof wRaw==="string")?(function(){var o={};o[langs[0]]=wRaw;return o;})():wRaw;
+    const parts=cols.map(k=>k?(obj[k]||""):""); while(parts.length&&parts[parts.length-1]==="")parts.pop(); return parts.join(", "); });
+  document.getElementById("newListWords").value=lines.join("\n");
+  document.getElementById("listFormTitle").textContent="✏️ 编辑题目";
+  document.getElementById("saveListBtn").textContent="💾 更新";
+  document.getElementById("cancelEditBtn").classList.remove("hidden");
+  window.scrollTo(0, document.body.scrollHeight);
+}
+function saveList(){
+  const name=document.getElementById("newListName").value.trim();
+  const primary=document.getElementById("newPrimaryLang").value;
+  const t1=document.getElementById("newT1Lang").value, t2=document.getElementById("newT2Lang").value;
+  const lines=document.getElementById("newListWords").value.split("\n").map(s=>s.trim()).filter(Boolean);
+  if(!name){alert("给这套题起个名字");return;} if(!lines.length){alert("至少输入一题");return;}
+  const cols=[primary,t1,t2];
+  const words=[]; lines.forEach(line=>{ const parts=line.split(/[，,]/).map(x=>x.trim()); const obj={};
+    cols.forEach((lang,i)=>{ if(lang && parts[i]) obj[lang]=parts[i]; });
+    if(obj[primary]) words.push(obj); });
+  if(!words.length){alert("没有可用的题目（每行至少要有主词）");return;}
+  const langs=[]; cols.forEach(l=>{ if(l && langs.indexOf(l)<0) langs.push(l); });
+  const ls=getLists();
+  if(editingListId){ const idx=ls.findIndex(x=>x.id===editingListId); if(idx>=0) ls[idx]={id:editingListId,name:name,langs:langs,words:words}; else ls.push({id:"L"+Date.now(),name:name,langs:langs,words:words}); }
+  else ls.push({id:"L"+Date.now(),name:name,langs:langs,words:words});
+  setLists(ls); resetListForm(); renderLists(); alert("保存好了！去「开始闯关」里选它。");
+}
+
+function saveKey(){store.set("apiKey",document.getElementById("apiKey").value.trim());const m=document.getElementById("keyMsg");m.className="feedback ok";m.textContent="✅ 已保存";}
+async function testKey(){
+  const key=document.getElementById("apiKey").value.trim(),m=document.getElementById("keyMsg");
+  if(!key){m.className="feedback no";m.textContent="先粘贴密钥";return;}
+  m.className="feedback";m.textContent="测试中…";
+  const px="iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+  try{await ocrRecognize(px,"en",key);m.className="feedback ok";m.textContent="✅ 密钥可用！自动批改已开启";store.set("apiKey",key);}
+  catch(e){m.className="feedback no";m.textContent="❌ "+e.message;}
+}
+function resetProgress(){ if(confirm("清空所有关卡进度和错词本？")){ store.set("progress",{}); store.set("mistakes",{}); alert("已清空"); go("home"); } }
+
+function normalize(s,lang){ s=(s||"").trim(); return lang==="zh"?s.replace(/[^一-龥]/g,""):s.toLowerCase().replace(/[^a-z]/g,""); }
+function ocrRecognize(base64,lang,key){
+  const body={requests:[{image:{content:base64},features:[{type:"DOCUMENT_TEXT_DETECTION"}],imageContext:{languageHints:[LANG[lang].hint]}}]};
+  return fetch("https://vision.googleapis.com/v1/images:annotate?key="+encodeURIComponent(key),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
+    .then(r=>r.json()).then(d=>{ if(d.error)throw new Error(d.error.message); const r0=d.responses&&d.responses[0]; const fta=r0&&r0.fullTextAnnotation; const text=(fta&&fta.text)||""; let minConf=1;
+      if(fta&&fta.pages){ fta.pages.forEach(pg=>(pg.blocks||[]).forEach(b=>(b.paragraphs||[]).forEach(p=>(p.words||[]).forEach(wd=>(wd.symbols||[]).forEach(sy=>{ if(typeof sy.confidence==="number") minConf=Math.min(minConf,sy.confidence); }))))); }
+      return {text:text, conf:minConf}; });
+}
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function unique(a){return a.filter((x,i)=>a.indexOf(x)===i);}
+function disable(box){const bs=box.querySelectorAll("button");for(let i=0;i<bs.length;i++)bs[i].onclick=null;}
+function allBankWords(lang){const out=[];Object.keys(BANK).forEach(k=>BANK[k].words.forEach(w=>out.push(w[lang])));return unique(out);}
+function randLetter(ex){let c;do{c=String.fromCharCode(97+Math.floor(Math.random()*26));}while(c===ex);return c;}
+function randLetters(ex,n){const o=[];while(o.length<n){const c=randLetter(ex);if(o.indexOf(c)<0)o.push(c);}return o;}
+function confusePick(ch,n){ let pool=(CONFUSE[ch]||[]).slice(); const o=unique(pool).filter(x=>x!==ch); while(o.length<n){const c=HANZI_POOL[Math.floor(Math.random()*HANZI_POOL.length)];if(c!==ch&&o.indexOf(c)<0)o.push(c);} return o.slice(0,n); }
+function oneLetterOff(word){ const idx=Math.floor(Math.random()*word.length); const bad=word.slice(0,idx)+randLetter(word[idx])+word.slice(idx+1); return {bad:bad,idx:idx}; }
+function misspellings(word,n){
+  const out=[]; let guard=0;
+  function add(v){ if(v!==word && out.indexOf(v)<0) out.push(v); }
+  while(out.length<n && guard++<40){
+    const op=Math.floor(Math.random()*4); let v=word;
+    if(op===0 && word.length>1){const i=Math.floor(Math.random()*(word.length-1));v=word.slice(0,i)+word[i+1]+word[i]+word.slice(i+2);}
+    else if(op===1){const i=Math.floor(Math.random()*word.length);v=word.slice(0,i)+randLetter(word[i])+word.slice(i+1);}
+    else if(op===2 && word.length>3){const i=Math.floor(Math.random()*word.length);v=word.slice(0,i)+word.slice(i+1);}
+    else {const i=Math.floor(Math.random()*word.length);v=word.slice(0,i)+word[i]+word.slice(i);}
+    add(v);
+  }
+  while(out.length<n) add(word+randLetter(""));
+  return out.slice(0,n);
+}
+function burst(){const e=document.createElement("div");e.className="confetti";e.textContent=["🎈","⭐","🎉","💛","✨","🌈"][Math.floor(Math.random()*6)];e.style.left=Math.random()*100+"vw";e.style.animationDuration=(1.2+Math.random())+"s";document.body.appendChild(e);setTimeout(()=>e.remove(),1800);}
+
+refreshHome();
+if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(()=>{});
+</script>
+</body>
+</html>
